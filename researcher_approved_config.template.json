@@ -1,0 +1,33 @@
+{
+  "method_config_version": "REQUIRES_RESEARCHER_DECISION",
+  "filter": {
+    "low_hz": null,
+    "high_hz": null,
+    "order": null,
+    "type": null,
+    "zero_phase": true
+  },
+  "rpeak": {
+    "primary_method": null,
+    "secondary_method": null,
+    "require_cross_check": null,
+    "match_tolerance_ms": null
+  },
+  "artifact": {
+    "min_rri_ms": null,
+    "max_rri_ms": null,
+    "local_change_threshold": null,
+    "mad_threshold": null
+  },
+  "correction": {
+    "method": null,
+    "max_consecutive_artifacts": null
+  },
+  "segment_qc": {
+    "minimum_duration_s": null,
+    "maximum_artifact_percent": null
+  },
+  "rest_state_sequence": [
+    "REQUIRES_RESEARCHER_DECISION"
+  ]
+}
