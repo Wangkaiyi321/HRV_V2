@@ -1,5 +1,5 @@
 {
-  "method_config_version": "v1_2026-08-26_AUD_draft_PENDING_REVIEW",
+  "method_config_version": "HRV_Preprocess_V2",
   "filter": {
     "low_hz": 0.5,
     "high_hz": 40,
