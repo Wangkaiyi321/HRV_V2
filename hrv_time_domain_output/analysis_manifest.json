@@ -1,0 +1,28 @@
+{
+  "created_utc": "2026-08-26T06:35:36.018937+00:00",
+  "script_sha256": "b368e2d1ea8cc1ac4a501db013849ecddede5bc9310597a680af934666c66ee6",
+  "input_files": [
+    {
+      "path": "hrv_preprocess_output\\0727 chen_try\\rri_and_nni.csv",
+      "sha256": "94f7daab0c00a560a5261921b9a41319ff149f26c2763c4bdf60ab94e58b44b8"
+    }
+  ],
+  "decisions": {
+    "sdnn_ddof": 1,
+    "ci_method": "t",
+    "missing_block_policy": "complete_blocks"
+  },
+  "python": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "figures_generated": [
+    "mean_rr_block_pre.png",
+    "mean_rr_block_post.png",
+    "mean_rr_condition_level.png",
+    "sdnn_block_pre.png",
+    "sdnn_block_post.png",
+    "sdnn_condition_level.png",
+    "rmssd_block_pre.png",
+    "rmssd_block_post.png",
+    "rmssd_condition_level.png"
+  ]
+}

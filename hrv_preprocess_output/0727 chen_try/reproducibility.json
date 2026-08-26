@@ -1,0 +1,11 @@
+{
+  "python_version": "3.14.6 (tags/v3.14.6:c63aec6, Jun 10 2026, 10:26:10) [MSC v.1944 64 bit (AMD64)]",
+  "mne_version": "1.12.1",
+  "neurokit2_version": "0.2.13",
+  "numpy_version": "2.5.2",
+  "scipy_version": "1.18.0",
+  "pandas_version": "2.3.3",
+  "processing_timestamp_utc": "2026-08-26T05:30:53.099541+00:00",
+  "method_config_version": "HRV_Preprocess_V2",
+  "config_sha256": "4e066fa5a4aed9effaf6ee0efb8a3a014396dbdfe5edb16f26f55e440ef56037"
+}
