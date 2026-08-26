@@ -55,7 +55,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--input-dir", type=Path, default=Path.cwd(), help="Folder containing .vhdr files (default: current folder).")
     parser.add_argument("--output-dir", type=Path, default=Path("hrv_output"), help="Where results are written.")
     parser.add_argument("--ecg-channel", default="ECG", help="Exact ECG channel name. Default: ECG; case-insensitive matching is used.")
-    parser.add_argument("--config", type=Path, required=True, help="Researcher-approved JSON configuration. The pipeline will not use implicit methodology defaults.")
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=Path(__file__).resolve().with_name("researcher_approved_config.json"),
+        help="Researcher-approved JSON configuration (default: researcher_approved_config.json next to this script).",
+    )
     return parser.parse_args()
 
 
