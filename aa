@@ -1,97 +1,93 @@
-建議以「前處理與統計分析分離、每一步皆可追溯」的方式撰寫。現有的 [`hrv_preprocess.py`](C:\\Users\\USER1\\Desktop\\HRV_V2\\hrv_preprocess.py) 已經產出 rri_and_nni.csv，因此不應重複做 ECG、R-peak 或 artifact 處理；新的分析程式只讀取已校正的 nni_corrected_ms。
-建議新增：
-hrv_analysis.py                 # 主程式與 CLI
-hrv_analysis_config.json        # 研究者核准的統計設定
-hrv_analysis/
-  input.py                      # 讀檔、欄位驗證、資料清理
-  transform.py                  # 將 segment 轉為 Time / Condition / Block
-  metrics.py                    # Mean RR、SDNN、RMSSD
-  aggregate.py                  # block → condition 聚合
-  summary.py                    # participant → group mean / 95% CI
-  plots.py                      # 六張指定圖
-  audit.py                      # 排除、缺漏、追溯紀錄
-tests/
-核心資料流應固定如下：
-rri_and_nni.csv
-→ schema / QC 驗證
-→ valid NNi
-→ block-level metrics
-→ condition-level metrics
-→ participant-level condition table
-→ group summary + 95% CI
-→ figures / audit outputs
-關鍵策略：
-1. 先定義「可分析 NNi」
-僅使用：
-nni = rows.loc[
-    rows["nni_corrected_ms"].notna()
-    & rows["review_status"].ne("excluded"),
-    "nni_corrected_ms"
-]
-同時保留原始列數、排除數、插補數與 QC 狀態，寫入 analysis_exclusions.csv。不要默默刪除資料。
-2. 將 segment 明確轉為分析層級
-目前資料中的 segment 如 pre_rest_01_EO、post_rest_06_EC、task，可轉成：
-segment	Time	Condition	Block
-pre_rest_01_EO	Pre	EO	EO1
-pre_rest_02_EC	Pre	EC	EC1
-post_rest_04_EC	Post	EC	EC2
-task	Task	Task	Task
+#不要只留下 NNi series。
 
+每一筆資料最好仍然保留：
 
-注意：現有設定的順序是 EO, EC, EO, EC, EO, EC，因此 block 編號不能直接使用休息段流水號，必須依各狀態個別累計，才會得到 EO1–EO3、EC1–EC3。
-3. 指標只在 block 層級計算
-def calculate_metrics(nni_ms: pd.Series, ddof: int) -> dict:
-    values = nni_ms.to_numpy(dtype=float)
-    return {
-        "mean_rr_ms": values.mean(),
-        "sdnn_ms": values.std(ddof=ddof),
-        "rmssd_ms": np.sqrt(np.mean(np.diff(values) ** 2)),
-        "n_nni": len(values),
-    }
-每一個 Participant × Time × Condition × Block 產生一列。輸出不可直接是 group mean，否則會失去受試者層級資訊。
-4. Condition 層級必須平均「block 指標」
-符合規格，不能將多個 block 的 NNi 合併後重算：
-condition_metrics = (
-    block_metrics
-    .groupby(["Participant", "Time", "Condition"], as_index=False)
-    [["Mean_RR_ms", "SDNN_ms", "RMSSD_ms"]]
-    .mean()
-)
-Task 沒有三個 block 時，應保留為一個 Task block，再自然形成 task condition。
-5. 將尚待研究者決策全部放進設定檔
-規格禁止自行決定的部分，例如：
-{
-  "sdnn_ddof": "REQUIRES_HUMAN_DECISION",
-  "ci_method": "REQUIRES_HUMAN_DECISION",
-  "missing_block_policy": "REQUIRES_HUMAN_DECISION",
-  "statistics": {
-    "enabled": false,
-    "multiple_comparison_correction": "REQUIRES_HUMAN_DECISION"
-  }
+Participant
+segment
+Time
+Condition
+Block
+原始 RRI
+corrected NNi
+correction / interpolation status
+review_status
+QC status
+也就是：
+
+validated_nni.csv 是「經過分析資格判定後的資料表」，而不是單純輸出一條 NNi column。
+
+# 目前 Time-domain analysis：
+
+做
+Mean
+95% CI
+participant-level aggregation
+descriptive visualization
+
+不做
+p-value
+significance stars
+pairwise significance
+ANOVA
+t-test
+LMM
+multiple comparison correction
+
+# Missing block policy由 codex決定
+
+# Task
+Time = Task
+Condition = Task
+Block = Task
+
+# "figures": {
+    "mean_rr_block": "REQUIRES_HUMAN_DECISION",
+    "mean_rr_condition": "REQUIRES_HUMAN_DECISION",
+    "sdnn_block": "REQUIRES_HUMAN_DECISION",
+    "sdnn_condition": "REQUIRES_HUMAN_DECISION",
+    "rmssd_block": "REQUIRES_HUMAN_DECISION",
+    "rmssd_condition": "REQUIRES_HUMAN_DECISION"
 }
-在未完成前，程式應停止或只輸出 descriptive summary，不畫顯著性星號。較合理的預設方向是先做「受試者層級平均 ± 95% CI」，暫不做推論統計。
-6. 繪圖以資料表為唯一來源
-六張圖都由 group summary table 產生，而不是重新讀 NNi：
-- Mean RR：block、condition
-- SDNN：block、condition
-- RMSSD：block、condition
-每圖輸出 .png 與 .svg；Mean RR block 圖採 Pre / Post 兩個 panel。SDNN 與 RMSSD 的 line 或 histogram 需由研究者指定，否則在設定檔標示 REQUIRES_HUMAN_DECISION。
-7. 輸出應分層且可稽核
-analysis_output/
-  validated_nni.csv
-  block_metrics.csv
-  condition_metrics.csv
-  group_summary.csv
-  analysis_exclusions.csv
-  analysis_manifest.json
-  figures/
-analysis_manifest.json 應記錄輸入檔 hash、分析設定 hash、執行時間、套件版本與每個輸出檔案，串起 specification 所要求的追溯鏈。
-8. 測試優先於畫圖
-至少建立以下單元測試：
-- Mean RR、SDNN、RMSSD 使用已知 NNi 的正確值。
-- EO/EC block 編號正確。
-- condition value 等於三個 block metric 的平均，而非 pooled NNi 的 metric。
-- 缺少必要欄位時必須失敗。
-- 缺少一個 block 時依設定檔政策處理。
-- 空 NNi、單一 NNi（RMSSD 無法計算）時產生明確狀態而非錯誤數字。
-我建議實作順序是：先完成 block_metrics.csv → condition_metrics.csv → 驗證測試 → group summary / CI → figures。這樣能先確認 HRV 計算與聚合正確，再處理視覺化與統計決策。
+
+# 「analysis unit」檢查
+任何 group-level aggregation 都不得回到 NNi level。
+
+# 把「QC」和「analysis exclusion」分開
+最好區分：
+
+raw_missing
+artifact_excluded
+manual_excluded
+qc_excluded
+corrected
+interpolated
+valid
+
+最後才形成：
+
+analysis_eligible = True / False
+
+
+① block_metrics.csv
+
+↓
+
+② condition_metrics.csv
+
+↓
+
+③ unit tests
+
+↓
+
+④ participant-level summary
+
+↓
+
+⑤ group mean + 95% CI
+
+↓
+
+⑥ figures
+
+在 ①～⑤ 全部通過測試以前，不允許 Codex 開發或修改 figures。
