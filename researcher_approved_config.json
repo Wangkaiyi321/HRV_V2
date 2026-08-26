@@ -1,0 +1,31 @@
+{
+  "method_config_version": "v1_2026-08-26_AUD_draft_PENDING_REVIEW",
+  "filter": {
+    "low_hz": 0.5,
+    "high_hz": 40,
+    "order": 4,
+    "type": "bandpass",
+    "zero_phase": true
+  },
+  "rpeak": {
+    "primary_method": "neurokit",
+    "secondary_method": "pantompkins1985",
+    "require_cross_check": true,
+    "match_tolerance_ms": 50
+  },
+  "artifact": {
+    "min_rri_ms": 300,
+    "max_rri_ms": 2000,
+    "local_change_threshold": 0.2,
+    "mad_threshold": 3.5
+  },
+  "correction": {
+    "method": "linear_interpolation",
+    "max_consecutive_artifacts": 2
+  },
+  "segment_qc": {
+    "minimum_duration_s": 90,
+    "maximum_artifact_percent": 5
+  },
+  "rest_state_sequence": ["EO", "EC", "EO", "EC", "EO", "EC"]
+}
